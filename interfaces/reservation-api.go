@@ -8,11 +8,13 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"encoding/json"
 )
 
 type ReservationServiceI interface {
 	HandleNewReservation(*domain.Reservation)
 	HandleNewDriverSwipe(ds *domain.DriverSwipe)
+	GetReservations() []*domain.Reservation
 }
 
 type ReservationListener struct {
@@ -39,6 +41,24 @@ func NewReservationListener(rs ReservationServiceI) *ReservationListener {
 }
 
 func (rl *ReservationListener) Listen() {
+	http.HandleFunc("/reservations", func(w http.ResponseWriter, r *http.Request) {
+		var (
+			resp []byte
+			err  error
+		)
+
+		resp, err = json.Marshal(rl.reservationService.GetReservations())
+
+		if err != nil {
+			fmt.Println("ERROR:", err)
+			w.WriteHeader(500)
+			w.Write([]byte(err.Error()))
+		} else {
+			w.WriteHeader(200)
+			w.Write(resp)
+		}
+	})
+
 	http.HandleFunc("/ComService", func(w http.ResponseWriter, r *http.Request) {
 		var (
 			b    []byte

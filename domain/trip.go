@@ -24,7 +24,7 @@ const (
 )
 
 type Trip struct {
-	Reservation   *Reservation
+	Reservation   *Reservation `json:"-"`
 	VehicleDevice VehicleDevice
 	AccessDevice  AccessDevice
 	ReservationId string

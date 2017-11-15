@@ -31,6 +31,10 @@ func NewReservationService(rc ReservationClientI, ts *TripService, reservations 
 	return rs
 }
 
+func (rs *ReservationService) GetReservations() []*domain.Reservation {
+	return rs.reservations
+}
+
 func (rs *ReservationService) HandleNewReservation(r *domain.Reservation) {
 	r.GenerateTaskNumber()
 	r.TechStatus = domain.NEW
