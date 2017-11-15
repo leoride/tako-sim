@@ -2,13 +2,13 @@ package interfaces
 
 import (
 	"bytes"
+	"encoding/json"
 	"encoding/xml"
 	"fmt"
 	"github.com/leoride/tako-sim/domain"
 	"io/ioutil"
 	"net/http"
 	"strings"
-	"encoding/json"
 )
 
 type ReservationServiceI interface {

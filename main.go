@@ -28,8 +28,9 @@ func main() {
 		trips        []*domain.Trip        = make([]*domain.Trip, 0)
 	)
 
-	takoEndpoint = *flag.String("takoEndpoint", "http://localhost:8080/tako-fc", "Tako FC root URL")
-	port = *flag.Int("port", 8282, "Port the app listens to")
+	flag.StringVar(&takoEndpoint, "takoEndpoint", "http://localhost:8080/tako-fc", "Tako FC root URL")
+	flag.IntVar(&port, "port", 8282, "Port the app listens to")
+	flag.Parse()
 
 	tc = interfaces.NewTripClient(takoEndpoint)
 	ts = usecases.NewTripService(tc, trips)
