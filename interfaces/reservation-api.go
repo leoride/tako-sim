@@ -59,6 +59,20 @@ func (rl *ReservationListener) Listen() {
 		}
 	})
 
+	http.HandleFunc("/AuthService", func(w http.ResponseWriter, r *http.Request) {
+
+		string := "<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
+			"<s:Body>" +
+			"<ClientLoginResponse xmlns=\"http://tempuri.org/\">" +
+			"<ClientLoginResult>e691fd50-b0c2-4238-ac1e-3ac45bc75bb4</ClientLoginResult>" +
+			"</ClientLoginResponse>" +
+			"</s:Body>" +
+			"</s:Envelope>"
+
+		w.WriteHeader(200)
+		w.Write([]byte(string))
+	})
+
 	http.HandleFunc("/ComService", func(w http.ResponseWriter, r *http.Request) {
 		var (
 			b    []byte
