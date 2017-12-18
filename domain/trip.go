@@ -24,16 +24,18 @@ const (
 )
 
 type Trip struct {
-	Reservation   *Reservation `json:"-"`
-	VehicleDevice VehicleDevice
-	AccessDevice  AccessDevice
-	ReservationId string
-	TripId        string
-	StartTime     time.Time
-	EndTime       time.Time
-	OdoStart      int
-	OdoEnd        int
-	Status        TripStatus
+	Reservation    *Reservation `json:"-"`
+	VehicleDevice  VehicleDevice
+	AccessDevice   AccessDevice
+	ReservationId  string
+	TripId         string
+	StartTime      time.Time
+	EndTime        time.Time
+	OdoStart       int
+	OdoEnd         int
+	Status         TripStatus
+	IgnitionStatus bool
+	IgnitionChange time.Time
 }
 
 type DriverSwipe struct {
@@ -105,6 +107,147 @@ func (t *Trip) GenerateTripStart() string {
 
 func (t *Trip) GenerateTripEnd() string {
 	return t.generateEvent(TRIP_END)
+}
+
+func (t *Trip) GenerateTripSegment() string {
+	var tripSegment string
+	var keyValue string
+
+	loc := t.Reservation.GetTimezone()
+
+	if t.IgnitionStatus == false {
+		keyValue = "17" //OFF
+	} else if t.IgnitionStatus == true {
+		keyValue = "10" //ON
+	}
+
+	tripSegment = "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
+		"	<soap:Body>" +
+		"		<ns4:RawSegmentEvaluated xmlns=\"http://schemas.datacontract.org/2004/07/Invers.Ics.Interface\" xmlns:ns2=\"http://invers.com\" xmlns:ns3=\"http://schemas.datacontract.org/2004/07/Invers.DataTypes\" xmlns:ns4=\"http://tempuri.org/\" xmlns:ns5=\"http://schemas.microsoft.com/2003/10/Serialization/\" xmlns:ns6=\"http://schemas.datacontract.org/2004/07/System.Net.Mail\">" +
+		"			<ns4:segment>" +
+		"				<ns2:AdditionalParameters>" +
+		"					<list>" +
+		"						<AdditionalParameter>" +
+		"							<Name>KeyStatus</Name>" +
+		"							<ParamType>Int32</ParamType>" +
+		"							<Value>" + keyValue + "</Value>" +
+		"						</AdditionalParameter>" +
+		"					</list>" +
+		"				</ns2:AdditionalParameters>" +
+		"				<ns2:ComputedDrivingDistance>" + fmt.Sprint(3) + "</ns2:ComputedDrivingDistance>" +
+		"				<ns2:ComputedStartMileage>" + fmt.Sprint(t.OdoStart) + "</ns2:ComputedStartMileage>" +
+		"				<ns2:ComputedStopMileage>" + fmt.Sprint(t.OdoEnd) + "</ns2:ComputedStopMileage>" +
+		"				<ns2:DistanceConversionFactor>1.0</ns2:DistanceConversionFactor>" +
+		"				<ns2:DrivingDistance>" + fmt.Sprint(3) + "</ns2:DrivingDistance>" +
+		"				<ns2:Driver>true</ns2:Driver>" +
+		"				<ns2:EnterPassengerCount>0</ns2:EnterPassengerCount>" +
+		"				<ns2:Fuel>100</ns2:Fuel>" +
+		"				<ns2:Id>654</ns2:Id>" +
+		"				<ns2:JobType>Unknown</ns2:JobType>" +
+		"				<ns2:NewTrip>false</ns2:NewTrip>" +
+		"				<ns2:PassengerCount>0</ns2:PassengerCount>" +
+		"				<ns2:Pause>false</ns2:Pause>" +
+		"				<ns2:ReservationItem>" +
+		"					<ID>0</ID>" +
+		"					<Name/>" +
+		"					<OrgaNo>" + t.VehicleDevice.OrgaNo + "</OrgaNo>" +
+		"					<Type>BCSA</Type>" +
+		"				</ns2:ReservationItem>" +
+		"				<ns2:ReservationNo>" + t.ReservationId + "</ns2:ReservationNo>" +
+		"				<ns2:ReservationType>0</ns2:ReservationType>" +
+		"				<ns2:SentStatus>Sending</ns2:SentStatus>" +
+		"				<ns2:Source>" +
+		"					<ns2:DestinationAddress>" +
+		"						<ns2:Fax/>" +
+		"						<ns2:MailAddress>" +
+		"							<ns2:BCC/>" +
+		"							<ns2:CC/>" +
+		"							<ns2:From>" +
+		"								<Address/>" +
+		"								<DisplayName/>" +
+		"							</ns2:From>" +
+		"							<ns2:Password/>" +
+		"							<ns2:Priority>Normal</ns2:Priority>" +
+		"							<ns2:ReplyTo>" +
+		"								<Address/>" +
+		"								<DisplayName/>" +
+		"							</ns2:ReplyTo>" +
+		"							<ns2:Sender>" +
+		"								<Address/>" +
+		"								<DisplayName/>" +
+		"							</ns2:Sender>" +
+		"							<ns2:Server/>" +
+		"							<ns2:To/>" +
+		"							<ns2:UserName/>" +
+		"						</ns2:MailAddress>" +
+		"						<ns2:PhoneNo>+" + t.VehicleDevice.VehiclePhoneNo + "</ns2:PhoneNo>" +
+		"						<ns2:SIM>" +
+		"							<GSMDataNo/>" +
+		"							<GSMFaxNo/>" +
+		"							<GSMProvider/>" +
+		"							<GSMVoiceNo/>" +
+		"							<ID/>" +
+		"						</ns2:SIM>" +
+		"						<ns2:TCPHost/>" +
+		"						<ns2:TCPPort>0</ns2:TCPPort>" +
+		"					</ns2:DestinationAddress>" +
+		"					<ns2:DestinationType>IBOXX</ns2:DestinationType>" +
+		"					<ns2:Firmwareversion/>" +
+		"					<ns2:OrgaNo>" + t.VehicleDevice.OrgaNo + "</ns2:OrgaNo>" +
+		"					<ns2:SourceNo>95539211389632515</ns2:SourceNo>" +
+		"				</ns2:Source>" +
+		"				<ns2:Start>" + t.StartTime.In(loc).Format("2006-01-02T15:04:05") + "</ns2:Start>" +
+		"				<ns2:StartGPS>" +
+		"					<ns2:Altitude>0.0</ns2:Altitude>" +
+		"					<ns2:Distance>0</ns2:Distance>" +
+		"					<ns2:Format>ddd_dddddd</ns2:Format>" +
+		"					<ns2:Latitude>51.493905</ns2:Latitude>" +
+		"					<ns2:LatitudeHemisphere>32</ns2:LatitudeHemisphere>" +
+		"					<ns2:Longitude>-0.10749166666666667</ns2:Longitude>" +
+		"					<ns2:LongitudeHemisphere>32</ns2:LongitudeHemisphere>" +
+		"					<ns2:Quality>1</ns2:Quality>" +
+		"					<ns2:SatInUse>8</ns2:SatInUse>" +
+		"					<ns2:Timestamp>2015-04-28T04:49:43</ns2:Timestamp>" +
+		"				</ns2:StartGPS>" +
+		"				<ns2:StartMileage>" + fmt.Sprint(t.OdoStart) + "</ns2:StartMileage>" +
+		"				<ns2:Stop>" + t.EndTime.In(loc).Format("2006-01-02T15:04:05") + "</ns2:Stop>" +
+		"				<ns2:StopGPS>" +
+		"					<ns2:Altitude>0.0</ns2:Altitude>" +
+		"					<ns2:Distance>0</ns2:Distance>" +
+		"					<ns2:Format>ddd_dddddd</ns2:Format>" +
+		"					<ns2:Latitude>51.49389166666666</ns2:Latitude>" +
+		"					<ns2:LatitudeHemisphere>32</ns2:LatitudeHemisphere>" +
+		"					<ns2:Longitude>-0.107495</ns2:Longitude>" +
+		"					<ns2:LongitudeHemisphere>32</ns2:LongitudeHemisphere>" +
+		"					<ns2:Quality>1</ns2:Quality>" +
+		"					<ns2:SatInUse>9</ns2:SatInUse>" +
+		"					<ns2:Timestamp>2015-05-01T06:51:54</ns2:Timestamp>" +
+		"				</ns2:StopGPS>" +
+		"				<ns2:StopMileage>" + fmt.Sprint(t.OdoEnd) + "</ns2:StopMileage>" +
+		"				<ns2:SystemTimestamp>" +
+		"					<ns3:Timezone>20</ns3:Timezone>" +
+		"					<ns3:UTCDateTime>" + time.Now().UTC().Format("2006-01-02T15:04:05.0000000Z") + "</ns3:UTCDateTime>" + //2015-05-01T07:20:20.2299095-05:00
+		"				</ns2:SystemTimestamp>" +
+		"				<ns2:Tlv/>" +
+		"				<ns2:TripNo>1</ns2:TripNo>" +
+		"				<ns2:UserAccess>" +
+		"					<ns2:CardExtension>32</ns2:CardExtension>" +
+		"					<ns2:CardNo>" + t.AccessDevice.SmartcardCardNo + "</ns2:CardNo>" +
+		"					<ns2:CardOrga>" + t.AccessDevice.SmartcardOrgaNo + "</ns2:CardOrga>" +
+		"					<ns2:CocosSerialNo>0</ns2:CocosSerialNo>" +
+		"					<ns2:PIN/>" +
+		"					<ns2:PINs>0</ns2:PINs>" +
+		"					<ns2:SerialNo>" + t.AccessDevice.SmartcardSerialNo + "</ns2:SerialNo>" +
+		"					<ns2:TAN>0</ns2:TAN>" +
+		"					<ns2:TempPIN/>" +
+		"					<ns2:Type>" + t.AccessDevice.SmartcardType + "</ns2:Type>" +
+		"				</ns2:UserAccess>" +
+		"			</ns4:segment>" +
+		"		</ns4:RawSegmentEvaluated>" +
+		"	</soap:Body>" +
+		"</soap:Envelope>"
+
+	return tripSegment
 }
 
 func (t *Trip) GenerateTripData() string {

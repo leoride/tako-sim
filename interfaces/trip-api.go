@@ -59,6 +59,26 @@ func (tc *TripClient) SendTripEnd(t *domain.Trip) {
 	}
 }
 
+func (tc *TripClient) SendTripSegment(t *domain.Trip) {
+	body := []byte(t.GenerateTripSegment())
+	req, err := http.NewRequest("POST", tc.takoEndpoint+"/ws/invers/21/"+t.VehicleDevice.OrgaNo+"/trip", bytes.NewBuffer(body))
+
+	if err == nil {
+		client := &http.Client{}
+		resp, err := client.Do(req)
+
+		if err == nil {
+			fmt.Println("trip segment sent:", fmt.Sprint(t.Status))
+			fmt.Println("response Status:", resp.Status)
+			defer resp.Body.Close()
+		}
+	}
+
+	if err != nil {
+		fmt.Println("Trip segment error:", err)
+	}
+}
+
 func (tc *TripClient) SendTripData(t *domain.Trip) {
 	body := []byte(t.GenerateTripData())
 	req, err := http.NewRequest("POST", tc.takoEndpoint+"/ws/invers/21/"+t.VehicleDevice.OrgaNo+"/trip", bytes.NewBuffer(body))

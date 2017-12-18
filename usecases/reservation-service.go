@@ -112,6 +112,9 @@ func (rs *ReservationService) HandleNewDriverSwipe(ds *domain.DriverSwipe) {
 		trip.ReservationId = existingRes.ReservationId
 		trip.Reservation = existingRes
 
+		trip.IgnitionStatus = true
+		trip.IgnitionChange = time.Now()
+
 		existingRes.Trip = trip
 
 		rs.tripService.HandleTripStart(trip)
@@ -173,6 +176,11 @@ func (rw *ReservationWatcherThread) Watch() {
 
 				rw.TripService.HandleNoDrive(r)
 			}
+		} else if t != nil &&
+			(t.Status == domain.IN_PROGRESS || t.Status == domain.LATE) &&
+			t.IgnitionChange.Before(time.Now().Add(time.Duration(-5)*time.Minute)) {
+
+			rw.TripService.HandleTripSegment(t)
 		}
 	}
 }

@@ -2,7 +2,6 @@ package usecases
 
 import (
 	"github.com/leoride/tako-sim/domain"
-	"math"
 	"math/rand"
 	"time"
 )
@@ -11,6 +10,7 @@ type TripClientI interface {
 	SendTripStart(*domain.Trip)
 	SendTripEnd(*domain.Trip)
 
+	SendTripSegment(*domain.Trip)
 	SendTripData(*domain.Trip)
 	SendTripComplete(*domain.Trip)
 
@@ -42,8 +42,12 @@ func (ts *TripService) HandleTripStart(t *domain.Trip) {
 
 func (ts *TripService) HandleTripEnd(t *domain.Trip) {
 	t.EndTime = time.Now()
-	t.OdoEnd = t.OdoStart + int(math.Ceil(time.Since(t.StartTime).Hours()*float64(rand.Intn(100)+1)))
+	//t.OdoEnd = t.OdoStart + int(math.Ceil(time.Since(t.StartTime).Hours()*float64(rand.Intn(100)+1)))
 	t.Status = domain.ENDED
+
+	if t.IgnitionStatus == true {
+		ts.HandleTripSegment(t)
+	}
 
 	go ts.sendTripEnd(t)
 }
@@ -71,6 +75,21 @@ func (ts *TripService) HandleTripComplete(t *domain.Trip) {
 	go ts.sendTripComplete(t)
 }
 
+func (ts *TripService) HandleTripSegment(t *domain.Trip) {
+	t.IgnitionStatus = !t.IgnitionStatus
+	t.IgnitionChange = time.Now()
+
+	if t.IgnitionStatus == false {
+		if t.OdoEnd == 0 {
+			t.OdoEnd = t.OdoStart
+		}
+		t.OdoEnd = t.OdoEnd + 3
+	}
+	t.EndTime = time.Now()
+
+	go ts.sendTripSegment(t)
+}
+
 func (ts *TripService) HandleDriverLate(t *domain.Trip) {
 	t.Status = domain.LATE
 
@@ -91,6 +110,11 @@ func (ts *TripService) sendTripEnd(t *domain.Trip) {
 	ts.tripClient.SendTripEnd(t)
 
 	go ts.sendTripData(t)
+}
+
+func (ts *TripService) sendTripSegment(t *domain.Trip) {
+	time.Sleep(time.Second * 5)
+	ts.tripClient.SendTripSegment(t)
 }
 
 func (ts *TripService) sendTripData(t *domain.Trip) {
