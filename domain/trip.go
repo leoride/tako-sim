@@ -423,6 +423,12 @@ func generateProblemEvent(en EventName, t *Trip, ds *DriverSwipe) string {
 		loc, _ = time.LoadLocation("UTC")
 	}
 
+	if smartcardType == "Hitag16" {
+		smartcardType = "Hitag_16"
+	} else if smartcardType == "Hitag32" {
+		smartcardType = "Hitag_32"
+	}
+
 	return "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
 		"	<soap:Body>" +
 		"		<ns5:UsageProblemEventReceived xmlns=\"http://schemas.datacontract.org/2004/07/Invers.Ics.Interface\" xmlns:ns2=\"http://schemas.datacontract.org/2004/07/Invers.Ics.Interface.EvMo\" xmlns:ns3=\"http://invers.com\" xmlns:ns4=\"http://schemas.datacontract.org/2004/07/Invers.DataTypes\" xmlns:ns5=\"http://tempuri.org/\" xmlns:ns6=\"http://schemas.microsoft.com/2003/10/Serialization/\" xmlns:ns7=\"http://schemas.datacontract.org/2004/07/System.Net.Mail\">" +

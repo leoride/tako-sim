@@ -81,8 +81,8 @@ func (rs *ReservationService) HandleNewDriverSwipe(ds *domain.DriverSwipe) {
 
 				if value.AccessDevice.SmartcardType == ds.AccessDevice.SmartcardType {
 					switch value.AccessDevice.SmartcardType {
-					case "Hitag16":
-					case "Hitag32":
+					case "Hitag_16":
+					case "Hitag_32":
 						if value.AccessDevice.SmartcardCardNo == ds.AccessDevice.SmartcardCardNo &&
 							value.AccessDevice.SmartcardOrgaNo == ds.AccessDevice.SmartcardOrgaNo {
 							existingRes = value
