@@ -15,9 +15,12 @@ const (
 	ENDED       TripStatus = "ENDED"
 	COMPLETED   TripStatus = "COMPLETED"
 
-	TRIP_START    EventName = "TripStartFromDevice"
-	TRIP_END      EventName = "TripEndFromDevice"
-	TRIP_COMPLETE EventName = "TripFinished"
+	FIRST_IGNITION   EventName = "Startet"
+	DATAFOB_REMOVED  EventName = "DataFobRemoved"
+	DATAFOB_RETURNED EventName = "DataFobReturned"
+	TRIP_START       EventName = "TripStartFromDevice"
+	TRIP_END         EventName = "TripEndFromDevice"
+	TRIP_COMPLETE    EventName = "TripFinished"
 
 	REJECTED_ACCESS EventName = "RejectedAccess"
 	LATE_DRIVER     EventName = "DelayedTripEnd"
@@ -103,6 +106,18 @@ func (t *Trip) GenerateDriverLate() string {
 
 func (t *Trip) GenerateTripStart() string {
 	return t.generateEvent(TRIP_START)
+}
+
+func (t *Trip) GenerateFirstIgnition() string {
+	return t.generateEvent(FIRST_IGNITION)
+}
+
+func (t *Trip) GenerateDataFobAction(removed bool) string {
+	if removed {
+		return t.generateEvent(DATAFOB_REMOVED)
+	} else {
+		return t.generateEvent(DATAFOB_RETURNED)
+	}
 }
 
 func (t *Trip) GenerateTripEnd() string {
@@ -398,7 +413,7 @@ func (t *Trip) generateEvent(en EventName) string {
 	loc := t.Reservation.GetTimezone()
 	var mil string
 
-	if en == TRIP_START {
+	if en == TRIP_START || t.OdoEnd == 0 {
 		mil = fmt.Sprint(t.OdoStart)
 	} else {
 		mil = fmt.Sprint(t.OdoEnd)

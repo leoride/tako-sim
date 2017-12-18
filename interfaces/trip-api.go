@@ -39,6 +39,46 @@ func (tc *TripClient) SendTripStart(t *domain.Trip) {
 	}
 }
 
+func (tc *TripClient) SendFirstIgnition(t *domain.Trip) {
+	body := []byte(t.GenerateFirstIgnition())
+	req, err := http.NewRequest("POST", tc.takoEndpoint+"/ws/invers/21/"+t.VehicleDevice.OrgaNo+"/event", bytes.NewBuffer(body))
+
+	if err == nil {
+		client := &http.Client{}
+		resp, err := client.Do(req)
+
+		if err == nil {
+			fmt.Println("first ignition sent:", fmt.Sprint(t.Status))
+			fmt.Println("response Status:", resp.Status)
+			defer resp.Body.Close()
+		}
+	}
+
+	if err != nil {
+		fmt.Println("first ignition error:", err)
+	}
+}
+
+func (tc *TripClient) SendDataFobAction(t *domain.Trip, removed bool) {
+	body := []byte(t.GenerateDataFobAction(removed))
+	req, err := http.NewRequest("POST", tc.takoEndpoint+"/ws/invers/21/"+t.VehicleDevice.OrgaNo+"/event", bytes.NewBuffer(body))
+
+	if err == nil {
+		client := &http.Client{}
+		resp, err := client.Do(req)
+
+		if err == nil {
+			fmt.Println("datafob event sent:", fmt.Sprint(t.Status))
+			fmt.Println("response Status:", resp.Status)
+			defer resp.Body.Close()
+		}
+	}
+
+	if err != nil {
+		fmt.Println("datafob event error:", err)
+	}
+}
+
 func (tc *TripClient) SendTripEnd(t *domain.Trip) {
 	body := []byte(t.GenerateTripEnd())
 	req, err := http.NewRequest("POST", tc.takoEndpoint+"/ws/invers/21/"+t.VehicleDevice.OrgaNo+"/event", bytes.NewBuffer(body))

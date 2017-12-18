@@ -8,6 +8,8 @@ import (
 
 type TripClientI interface {
 	SendTripStart(*domain.Trip)
+	SendDataFobAction(*domain.Trip, bool)
+	SendFirstIgnition(*domain.Trip)
 	SendTripEnd(*domain.Trip)
 
 	SendTripSegment(*domain.Trip)
@@ -103,11 +105,22 @@ func (ts *TripService) HandleRejectedAccess(ds *domain.DriverSwipe) {
 func (ts *TripService) sendTripStart(t *domain.Trip) {
 	time.Sleep(time.Second * 30)
 	ts.tripClient.SendTripStart(t)
+
+	time.Sleep(time.Second * 10)
+	ts.tripClient.SendDataFobAction(t, true)
+
+	if t.OdoEnd == 0 {
+		time.Sleep(time.Second * 10)
+		ts.tripClient.SendFirstIgnition(t)
+	}
 }
 
 func (ts *TripService) sendTripEnd(t *domain.Trip) {
 	time.Sleep(time.Second * 30)
 	ts.tripClient.SendTripEnd(t)
+
+	time.Sleep(time.Second * 10)
+	ts.tripClient.SendDataFobAction(t, false)
 
 	go ts.sendTripData(t)
 }
@@ -123,7 +136,7 @@ func (ts *TripService) sendTripData(t *domain.Trip) {
 }
 
 func (ts *TripService) sendTripComplete(t *domain.Trip) {
-	time.Sleep(time.Second * 10)
+	time.Sleep(time.Second * 60)
 	ts.tripClient.SendTripComplete(t)
 }
 

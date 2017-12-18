@@ -176,7 +176,9 @@ func (rw *ReservationWatcherThread) Watch() {
 
 				rw.TripService.HandleNoDrive(r)
 			}
-		} else if t != nil &&
+		}
+
+		if t != nil &&
 			(t.Status == domain.IN_PROGRESS || t.Status == domain.LATE) &&
 			t.IgnitionChange.Before(time.Now().Add(time.Duration(-5)*time.Minute)) {
 
