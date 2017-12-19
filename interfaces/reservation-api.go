@@ -15,6 +15,7 @@ type ReservationServiceI interface {
 	HandleNewReservation(*domain.Reservation)
 	HandleNewDriverSwipe(ds *domain.DriverSwipe)
 	GetReservations() []*domain.Reservation
+	GetReservation(id string) *domain.Reservation
 }
 
 type ReservationListener struct {
@@ -41,13 +42,28 @@ func NewReservationListener(rs ReservationServiceI) *ReservationListener {
 }
 
 func (rl *ReservationListener) Listen() {
-	http.HandleFunc("/reservations", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/reservations/", func(w http.ResponseWriter, r *http.Request) {
 		var (
 			resp []byte
 			err  error
 		)
 
-		resp, err = json.Marshal(rl.reservationService.GetReservations())
+		id := strings.TrimPrefix(r.URL.Path, "/reservations/")
+
+		if id == "" {
+			//return all
+			resp, err = json.Marshal(rl.reservationService.GetReservations())
+		} else {
+			//return one
+			res := rl.reservationService.GetReservation(id)
+
+			if res != nil {
+				resp, err = json.Marshal(res)
+			} else {
+				w.WriteHeader(404)
+				return
+			}
+		}
 
 		if err != nil {
 			fmt.Println("ERROR:", err)

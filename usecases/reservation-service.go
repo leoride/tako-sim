@@ -35,6 +35,16 @@ func (rs *ReservationService) GetReservations() []*domain.Reservation {
 	return rs.reservations
 }
 
+func (rs *ReservationService) GetReservation(id string) *domain.Reservation {
+	for _, value := range rs.reservations {
+		if value.ReservationId == id {
+			return value
+		}
+	}
+
+	return nil
+}
+
 func (rs *ReservationService) HandleNewReservation(r *domain.Reservation) {
 	r.GenerateTaskNumber()
 	r.TechStatus = domain.NEW
