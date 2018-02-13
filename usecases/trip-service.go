@@ -17,6 +17,7 @@ type TripClientI interface {
 	SendTripComplete(*domain.Trip)
 
 	SendRejectedAccess(*domain.DriverSwipe)
+	SendCUCMRequest(*domain.DriverSwipe)
 	SendDriverLate(*domain.Trip)
 }
 
@@ -102,6 +103,10 @@ func (ts *TripService) HandleRejectedAccess(ds *domain.DriverSwipe) {
 	go ts.sendRejectedAccess(ds)
 }
 
+func (ts *TripService) HandleCUCMRequest(ds *domain.DriverSwipe) {
+	go ts.sendCUCMRequest(ds)
+}
+
 func (ts *TripService) sendTripStart(t *domain.Trip) {
 	time.Sleep(time.Second * 30)
 	ts.tripClient.SendTripStart(t)
@@ -148,4 +153,9 @@ func (ts *TripService) sendDriverLate(t *domain.Trip) {
 func (ts *TripService) sendRejectedAccess(ds *domain.DriverSwipe) {
 	time.Sleep(time.Second * 30)
 	ts.tripClient.SendRejectedAccess(ds)
+}
+
+func (ts *TripService) sendCUCMRequest(ds *domain.DriverSwipe) {
+	time.Sleep(time.Second * 30)
+	ts.tripClient.SendCUCMRequest(ds)
 }

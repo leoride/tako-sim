@@ -111,7 +111,7 @@ func (rs *ReservationService) HandleNewDriverSwipe(ds *domain.DriverSwipe) {
 
 	if existingRes == nil {
 		fmt.Println("Driver swipe received, but no reservation found")
-		rs.tripService.HandleRejectedAccess(ds)
+		rs.tripService.HandleCUCMRequest(ds)
 
 	} else if existingRes != nil && existingRes.Trip == nil {
 		fmt.Println("Driver swipe received, starting trip for reservation", existingRes.ReservationId)

@@ -198,3 +198,23 @@ func (tc *TripClient) SendRejectedAccess(ds *domain.DriverSwipe) {
 		fmt.Println("Rejected access error:", err)
 	}
 }
+
+func (tc *TripClient) SendCUCMRequest(ds *domain.DriverSwipe) {
+	body := []byte(ds.GenerateCUCMRequest())
+	req, err := http.NewRequest("POST", tc.takoEndpoint+"/ws/invers/21/"+ds.VehicleDevice.OrgaNo+"/res", bytes.NewBuffer(body))
+
+	if err == nil {
+		client := &http.Client{}
+		resp, err := client.Do(req)
+
+		if err == nil {
+			fmt.Println("CUCM request sent")
+			fmt.Println("response Status:", resp.Status)
+			defer resp.Body.Close()
+		}
+	}
+
+	if err != nil {
+		fmt.Println("CUCM request error:", err)
+	}
+}

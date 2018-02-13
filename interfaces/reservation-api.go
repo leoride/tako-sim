@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"time"
 )
 
 type ReservationServiceI interface {
@@ -103,6 +104,8 @@ func (rl *ReservationListener) Listen() {
 				resp, err = rl.listenForReservation(b)
 			} else if strings.Contains(body, "SendVirtualSmartCard") {
 				resp, err = rl.listenForSwipe(b)
+			} else if strings.Contains(body, "AnswerRequest") {
+				resp, err = rl.listenForCUCMResponse(b)
 			} else {
 				err = fmt.Errorf("Unsupported method")
 			}
@@ -145,6 +148,32 @@ func (rl *ReservationListener) listenForSwipe(b []byte) ([]byte, error) {
 	} else {
 		return nil, fmt.Errorf("Error processing request:", err)
 	}
+}
+
+func (rl *ReservationListener) listenForCUCMResponse(b []byte) ([]byte, error) {
+	//TODO: do not hardcode
+	response := "<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
+		"\n\t<s:Body>" +
+		"\n\t\t<AnswerRequestResponse xmlns=\"http://tempuri.org/\">" +
+		"\n\t\t\t<AnswerRequestResult xmlns:a=\"http://invers.com\" xmlns:i=\"http://www.w3.org/2001/XMLSchema-instance\">" +
+		"\n\t\t\t\t<a:TaskStatus>" +
+		"\n\t\t\t\t\t<a:CustomerId>00000000-0000-0000-0000-000000000000</a:CustomerId>" +
+		"\n\t\t\t\t\t<a:DataStatus>Sending</a:DataStatus>" +
+		"\n\t\t\t\t\t<a:TaskError>NoError</a:TaskError>" +
+		"\n\t\t\t\t\t<a:TaskNumber>999999</a:TaskNumber>" +
+		"\n\t\t\t\t\t<a:TaskSendStatus>New</a:TaskSendStatus>" +
+		"\n\t\t\t\t\t<a:Timestamp xmlns:b=\"http://schemas.datacontract.org/2004/07/Invers.DataTypes\">" +
+		"\n\t\t\t\t\t\t<b:Timezone>20</b:Timezone>" +
+		"\n\t\t\t\t\t\t<b:UTCDateTime>" + time.Now().UTC().Format("2006-01-02T15:04:05.0000000Z") + "</b:UTCDateTime>" +
+		"\n\t\t\t\t\t</a:Timestamp>" +
+		"\n\t\t\t\t\t<a:UsedCommsystem>Unknown</a:UsedCommsystem>" +
+		"\n\t\t\t\t</a:TaskStatus>" +
+		"\n\t\t\t</AnswerRequestResult>" +
+		"\n\t\t</AnswerRequestResponse>" +
+		"\n\t</s:Body>" +
+		"\n</s:Envelope>"
+
+	return []byte(response), nil
 }
 
 func (rc *ReservationClient) SendUpdate(r domain.RequestI) {

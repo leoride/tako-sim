@@ -2,6 +2,7 @@ package domain
 
 import (
 	"fmt"
+	"github.com/google/uuid"
 	"math/rand"
 	"time"
 )
@@ -715,6 +716,121 @@ func generateProblemEvent(en EventName, t *Trip, ds *DriverSwipe) string {
 		"				<ns3:RejectedAccessReason>NoReservation</ns3:RejectedAccessReason>" +
 		"			</ns5:usageProblem>" +
 		"		</ns5:UsageProblemEventReceived>" +
+		"	</soap:Body>" +
+		"</soap:Envelope>"
+}
+
+func (ds *DriverSwipe) GenerateCUCMRequest() string {
+
+	var (
+		vehicleDevice     VehicleDevice
+		smartcardType     string
+		smartcardSerialNo string
+		smartcardCardNo   string
+		smartcardOrgaNo   string
+		loc               *time.Location
+	)
+
+	vehicleDevice = ds.VehicleDevice
+	smartcardType = ds.AccessDevice.SmartcardType
+	smartcardSerialNo = ds.AccessDevice.SmartcardSerialNo
+	smartcardCardNo = ds.AccessDevice.SmartcardCardNo
+	smartcardOrgaNo = ds.AccessDevice.SmartcardOrgaNo
+	loc, _ = time.LoadLocation("UTC")
+
+	if smartcardType == "Hitag16" {
+		smartcardType = "Hitag_16"
+	} else if smartcardType == "Hitag32" {
+		smartcardType = "Hitag_32"
+	}
+
+	return "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
+		"	<soap:Body>" +
+		"		<ns5:RequestReceived xmlns=\"http://schemas.datacontract.org/2004/07/Invers.Ics.Interface\" xmlns:ns2=\"http://schemas.datacontract.org/2004/07/Invers.Ics.Interface.EvMo\" xmlns:ns3=\"http://invers.com\" xmlns:ns4=\"http://schemas.datacontract.org/2004/07/Invers.DataTypes\" xmlns:ns5=\"http://tempuri.org/\" xmlns:ns6=\"http://schemas.microsoft.com/2003/10/Serialization/\" xmlns:ns7=\"http://schemas.datacontract.org/2004/07/System.Net.Mail\">" +
+		"			<ns5:request>" +
+		"				<CUCMNo>1</CUCMNo>" +
+		"				<CommSystem>GPRS</CommSystem>" +
+		"				<ID>40931</ID>" +
+		"				<LoginName>" + vehicleDevice.VehiclePhoneNo + "</LoginName>" +
+		"				<SentStatus>Sending</SentStatus>" +
+		"				<Source>" +
+		"					<ns3:DestinationAddress>" +
+		"						<ns3:Fax/>" +
+		"						<ns3:MailAddress>" +
+		"							<ns3:BCC/>" +
+		"							<ns3:CC/>" +
+		"							<ns3:From>" +
+		"								<Address/>" +
+		"								<DisplayName/>" +
+		"							</ns3:From>" +
+		"							<ns3:Password/>" +
+		"							<ns3:Priority>Normal</ns3:Priority>" +
+		"							<ns3:ReplyTo>" +
+		"								<Address/>" +
+		"								<DisplayName/>" +
+		"							</ns3:ReplyTo>" +
+		"							<ns3:Sender>" +
+		"								<Address/>" +
+		"								<DisplayName/>" +
+		"							</ns3:Sender>" +
+		"							<ns3:Server/>" +
+		"							<ns3:To/>" +
+		"							<ns3:UserName/>" +
+		"						</ns3:MailAddress>" +
+		"						<ns3:PhoneNo>+" + vehicleDevice.VehiclePhoneNo + "</ns3:PhoneNo>" +
+		"						<ns3:SIM>" +
+		"							<GSMDataNo/>" +
+		"							<GSMFaxNo/>" +
+		"							<GSMProvider/>" +
+		"							<GSMVoiceNo/>" +
+		"							<ID/>" +
+		"						</ns3:SIM>" +
+		"						<ns3:TCPHost/>" +
+		"						<ns3:TCPPort>0</ns3:TCPPort>" +
+		"					</ns3:DestinationAddress>" +
+		"					<ns3:DestinationType>BCSA</ns3:DestinationType>" +
+		"					<ns3:Firmwareversion/>" +
+		"					<ns3:OrgaNo>" + vehicleDevice.OrgaNo + "</ns3:OrgaNo>" +
+		"					<ns3:SourceNo>132309508675338243</ns3:SourceNo>" +
+		"				</Source>" +
+		"				<SystemTimestamp xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:nil=\"true\"/>" +
+		"				<Timestamp>" +
+		"					<ns3:Timezone>20</ns3:Timezone>" +
+		"					<ns3:UTCDateTime>" + time.Now().UTC().Format("2006-01-02T15:04:05Z") + "</ns3:UTCDateTime>" +
+		"				</Timestamp>" +
+		"				<Type>DemandReservation</Type>" +
+		"				<Waiting>false</Waiting>" +
+		"				<ns3:Request>" +
+		"					<ns3:Access>" +
+		"						<ns3:UserAccess>" +
+		"							<ns3:CardExtension>32</ns3:CardExtension>" +
+		"							<ns3:CardNo>" + smartcardCardNo + "</ns3:CardNo>" +
+		"							<ns3:CardOrga>" + smartcardOrgaNo + "</ns3:CardOrga>" +
+		"							<ns3:CocosSerialNo>0</ns3:CocosSerialNo>" +
+		"							<ns3:PIN/>" +
+		"							<ns3:PINs>0</ns3:PINs>" +
+		"							<ns3:SerialNo>" + smartcardSerialNo + "</ns3:SerialNo>" +
+		"							<ns3:TAN>0</ns3:TAN>" +
+		"							<ns3:TempPIN/>" +
+		"							<ns3:Type>" + smartcardType + "</ns3:Type>" +
+		"						</ns3:UserAccess>" +
+		"					</ns3:Access>" +
+		"					<ns3:AdditionalParameters>" +
+		"						<list/>" +
+		"					</ns3:AdditionalParameters>" +
+		"					<ns3:Item>" +
+		"						<ID>0</ID>" +
+		"						<Name/>" +
+		"						<OrgaNo>" + vehicleDevice.OrgaNo + "</OrgaNo>" +
+		"						<Type>BCSA</Type>" +
+		"					</ns3:Item>" +
+		"					<ns3:Position/>" +
+		"					<ns3:RequestID>" + uuid.New().String() + "</ns3:RequestID>" +
+		"					<ns3:Type>ReservationCheck</ns3:Type>" +
+		"					<ns2:Timestamp>" + time.Now().In(loc).Format("2006-01-02T15:04:05") + "</ns2:Timestamp>" +
+		"				</ns3:Request>" +
+		"			</ns5:request>" +
+		"		</ns5:RequestReceived>" +
 		"	</soap:Body>" +
 		"</soap:Envelope>"
 }
