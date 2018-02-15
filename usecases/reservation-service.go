@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/leoride/tako-sim/domain"
 	"time"
+	"github.com/google/uuid"
 )
 
 type ReservationClientI interface {
@@ -14,6 +15,8 @@ type ReservationService struct {
 	reservationClient ReservationClientI
 	tripService       *TripService
 	reservations      []*domain.Reservation
+
+	cucmRequests	  map[string]*domain.DriverSwipe
 }
 
 type ReservationWatcherThread struct {
@@ -27,6 +30,7 @@ func NewReservationService(rc ReservationClientI, ts *TripService, reservations 
 	rs.reservationClient = rc
 	rs.tripService = ts
 	rs.reservations = reservations
+	rs.cucmRequests = make(map[string]*domain.DriverSwipe)
 
 	return rs
 }
@@ -111,6 +115,9 @@ func (rs *ReservationService) HandleNewDriverSwipe(ds *domain.DriverSwipe) {
 
 	if existingRes == nil {
 		fmt.Println("Driver swipe received, but no reservation found")
+
+		ds.CUCMGuid = uuid.New().String()
+		rs.cucmRequests[ds.CUCMGuid] = ds
 		rs.tripService.HandleCUCMRequest(ds)
 
 	} else if existingRes != nil && existingRes.Trip == nil {
@@ -141,26 +148,30 @@ func (rs *ReservationService) HandleNewCUCMResponse(cr *domain.CUCMResponse) {
 	cr.GenerateTaskNumber()
 	cr.TechStatus = domain.NEW
 
-	if cr.ReservationId == "" {
-		// TODO: Rejected access
-		fmt.Println("This is a refusal - Generate Rejected Access!")
-	} else {
-		fmt.Println("This is a success - Create reservation and Generate Trip Start!")
-		r := new(domain.Reservation)
-		r.ReservationId = cr.ReservationId
-		r.TechStatus = cr.TechStatus
-		r.RequestId = cr.RequestId
-		r.AccessDevice = cr.AccessDevice
-		r.EndTime = cr.EndTime
-		r.LateAlarm = cr.LateAlarm
-		r.LateBuffer = cr.LateBuffer
-		r.StartTime = cr.StartTime
-		r.Timezone = cr.Timezone
-		r.VehicleDevice = cr.VehicleDevice
+	ds := rs.cucmRequests[cr.Guid]
 
+	if ds != nil {
+		if cr.ReservationId == "" {
+			fmt.Println("This is a refusal - Generate Rejected Access!")
 
+			rs.tripService.HandleRejectedAccess(ds)
+		} else {
+			fmt.Println("This is a success - Create reservation and Generate Trip Start!")
+			r := new(domain.Reservation)
+			r.ReservationId = cr.ReservationId
+			r.TechStatus = cr.TechStatus
+			r.RequestId = cr.RequestId
+			r.AccessDevice = cr.AccessDevice
+			r.EndTime = cr.EndTime
+			r.LateAlarm = cr.LateAlarm
+			r.LateBuffer = cr.LateBuffer
+			r.StartTime = cr.StartTime
+			r.Timezone = cr.Timezone
+			r.VehicleDevice = cr.VehicleDevice
 
-		rs.HandleNewReservation(r)
+			rs.HandleNewReservation(r)
+			rs.HandleNewDriverSwipe(ds)
+		}
 	}
 
 	go rs.sendCUCMResponseStatusUpdates(cr)

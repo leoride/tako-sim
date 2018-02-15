@@ -2,7 +2,6 @@ package domain
 
 import (
 	"fmt"
-	"github.com/google/uuid"
 	"math/rand"
 	"time"
 )
@@ -43,6 +42,7 @@ type Trip struct {
 }
 
 type DriverSwipe struct {
+	CUCMGuid      string
 	TechStatus    TaskStatus
 	RequestId     string              `xml:"Body>SendVirtualSmartCard>task>TaskNumber"`
 	VehicleDevice VehicleDevice       `xml:"Body>SendVirtualSmartCard>task>Destination"`
@@ -57,6 +57,7 @@ type VirtualAccessDevice struct {
 }
 
 type CUCMResponse struct {
+	Guid		  string `xml:"Body>AnswerRequest>guid"`
 	Timezone      int `xml:"Body>AnswerRequest>taskList>Task>Reservation>Start>Timezone"`
 	TechStatus    TaskStatus
 	VehicleDevice VehicleDevice `xml:"Body>AnswerRequest>taskList>Task>Destination"`
@@ -881,7 +882,7 @@ func (ds *DriverSwipe) GenerateCUCMRequest() string {
 		"						<Type>BCSA</Type>" +
 		"					</ns3:Item>" +
 		"					<ns3:Position/>" +
-		"					<ns3:RequestID>" + uuid.New().String() + "</ns3:RequestID>" +
+		"					<ns3:RequestID>" + ds.CUCMGuid + "</ns3:RequestID>" +
 		"					<ns3:Type>ReservationCheck</ns3:Type>" +
 		"					<ns2:Timestamp>" + time.Now().In(loc).Format("2006-01-02T15:04:05") + "</ns2:Timestamp>" +
 		"				</ns3:Request>" +
