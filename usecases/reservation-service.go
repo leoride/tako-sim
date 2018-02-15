@@ -143,10 +143,24 @@ func (rs *ReservationService) HandleNewCUCMResponse(cr *domain.CUCMResponse) {
 
 	if cr.ReservationId == "" {
 		// TODO: Rejected access
-		fmt.Println("TODO: Rejected Access!")
+		fmt.Println("This is a refusal - Generate Rejected Access!")
 	} else {
-		// TODO: Create reservation + Start trip
-		fmt.Println("TODO: Trip Start!")
+		fmt.Println("This is a success - Create reservation and Generate Trip Start!")
+		r := new(domain.Reservation)
+		r.ReservationId = cr.ReservationId
+		r.TechStatus = cr.TechStatus
+		r.RequestId = cr.RequestId
+		r.AccessDevice = cr.AccessDevice
+		r.EndTime = cr.EndTime
+		r.LateAlarm = cr.LateAlarm
+		r.LateBuffer = cr.LateBuffer
+		r.StartTime = cr.StartTime
+		r.Timezone = cr.Timezone
+		r.VehicleDevice = cr.VehicleDevice
+
+
+
+		rs.HandleNewReservation(r)
 	}
 
 	go rs.sendCUCMResponseStatusUpdates(cr)
