@@ -137,6 +137,21 @@ func (rs *ReservationService) HandleNewDriverSwipe(ds *domain.DriverSwipe) {
 	go rs.sendDriverSwipeStatusUpdates(ds)
 }
 
+func (rs *ReservationService) HandleNewCUCMResponse(cr *domain.CUCMResponse) {
+	cr.GenerateTaskNumber()
+	cr.TechStatus = domain.NEW
+
+	if cr.ReservationId == "" {
+		// TODO: Rejected access
+		fmt.Println("TODO: Rejected Access!")
+	} else {
+		// TODO: Create reservation + Start trip
+		fmt.Println("TODO: Trip Start!")
+	}
+
+	go rs.sendCUCMResponseStatusUpdates(cr)
+}
+
 func (rs *ReservationService) sendReservationStatusUpdates(r *domain.Reservation) {
 	time.Sleep(time.Second * 5)
 	r.TechStatus = domain.SENT_TO_CUCM
@@ -163,6 +178,20 @@ func (rs *ReservationService) sendDriverSwipeStatusUpdates(ds *domain.DriverSwip
 	time.Sleep(time.Second * 5)
 	ds.TechStatus = domain.RECEIVED
 	rs.reservationClient.SendUpdate(ds)
+}
+
+func (rs *ReservationService) sendCUCMResponseStatusUpdates(cr *domain.CUCMResponse) {
+	time.Sleep(time.Second * 5)
+	cr.TechStatus = domain.SENT_TO_CUCM
+	rs.reservationClient.SendUpdate(cr)
+
+	time.Sleep(time.Second * 5)
+	cr.TechStatus = domain.ACCEPTED_BY_CUCM
+	rs.reservationClient.SendUpdate(cr)
+
+	time.Sleep(time.Second * 5)
+	cr.TechStatus = domain.RECEIVED
+	rs.reservationClient.SendUpdate(cr)
 }
 
 func (rw *ReservationWatcherThread) Watch() {

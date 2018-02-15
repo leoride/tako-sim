@@ -56,6 +56,19 @@ type VirtualAccessDevice struct {
 	SmartcardType     string `xml:"Type"`
 }
 
+type CUCMResponse struct {
+	Timezone      int `xml:"Body>AnswerRequest>taskList>Task>Reservation>Start>Timezone"`
+	TechStatus    TaskStatus
+	VehicleDevice VehicleDevice `xml:"Body>AnswerRequest>taskList>Task>Destination"`
+	AccessDevice  AccessDevice  `xml:"Body>AnswerRequest>taskList>Task>Reservation>UserAccessList>UserAccess"`
+	ReservationId string        `xml:"Body>AnswerRequest>taskList>Task>Reservation>ReservationNo"`
+	RequestId     string        `xml:"Body>AnswerRequest>taskList>Task>TaskNumber"`
+	StartTime     time.Time     `xml:"Body>AnswerRequest>taskList>Task>Reservation>Start>UTCDateTime"`
+	EndTime       time.Time     `xml:"Body>AnswerRequest>taskList>Task>Reservation>Stop>UTCDateTime"`
+	LateAlarm     bool          `xml:"Body>AnswerRequest>taskList>Task>Reservation>ReturnOptions>DelayMessage"`
+	LateBuffer    int           `xml:"Body>AnswerRequest>taskList>Task>Reservation>ReturnOptions>DelayTime"`
+}
+
 func (r *DriverSwipe) GetTechStatus() TaskStatus {
 	return r.TechStatus
 }
@@ -93,6 +106,49 @@ func (ds *DriverSwipe) GenerateResponse() string {
 		"\n\t\t\t\t<a:UsedCommsystem>Unknown</a:UsedCommsystem>" +
 		"\n\t\t\t</SendVirtualSmartCardResult>" +
 		"\n\t\t</SendVirtualSmartCardResponse>" +
+		"\n\t</s:Body>" +
+		"\n</s:Envelope>"
+}
+
+func (cr *CUCMResponse) GenerateTaskNumber() {
+	cr.RequestId = fmt.Sprint(rand.Intn(1000000))
+}
+
+func (cr *CUCMResponse) GetTechStatus() TaskStatus {
+	return cr.TechStatus
+}
+
+func (cr *CUCMResponse) GetRequestId() string {
+	return cr.RequestId
+}
+
+func (cr *CUCMResponse) GetOrgaNo() string {
+	return cr.VehicleDevice.OrgaNo
+}
+
+func (cr *CUCMResponse) GenerateStatus() string {
+	return generateStatus(RequestI(cr))
+}
+
+func (cr *CUCMResponse) GenerateResponse() string {
+	return "<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
+		"\n\t<s:Body>" +
+		"\n\t\t<AnswerRequestResponse xmlns=\"http://tempuri.org/\">" +
+		"\n\t\t\t<AnswerRequestResult xmlns:a=\"http://invers.com\" xmlns:i=\"http://www.w3.org/2001/XMLSchema-instance\">" +
+		"\n\t\t\t\t<a:TaskStatus>" +
+		"\n\t\t\t\t\t<a:CustomerId>00000000-0000-0000-0000-000000000000</a:CustomerId>" +
+		"\n\t\t\t\t\t<a:DataStatus>Sending</a:DataStatus>" +
+		"\n\t\t\t\t\t<a:TaskError>NoError</a:TaskError>" +
+		"\n\t\t\t\t\t<a:TaskNumber>" + cr.RequestId + "</a:TaskNumber>" +
+		"\n\t\t\t\t\t<a:TaskSendStatus>" + fmt.Sprint(cr.TechStatus) + "</a:TaskSendStatus>" +
+		"\n\t\t\t\t\t<a:Timestamp xmlns:b=\"http://schemas.datacontract.org/2004/07/Invers.DataTypes\">" +
+		"\n\t\t\t\t\t\t<b:Timezone>20</b:Timezone>" +
+		"\n\t\t\t\t\t\t<b:UTCDateTime>" + time.Now().UTC().Format("2006-01-02T15:04:05.0000000Z") + "</b:UTCDateTime>" +
+		"\n\t\t\t\t\t</a:Timestamp>" +
+		"\n\t\t\t\t\t<a:UsedCommsystem>Unknown</a:UsedCommsystem>" +
+		"\n\t\t\t\t</a:TaskStatus>" +
+		"\n\t\t\t</AnswerRequestResult>" +
+		"\n\t\t</AnswerRequestResponse>" +
 		"\n\t</s:Body>" +
 		"\n</s:Envelope>"
 }
