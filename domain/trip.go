@@ -57,8 +57,8 @@ type VirtualAccessDevice struct {
 }
 
 type CUCMResponse struct {
-	Guid		  string `xml:"Body>AnswerRequest>guid"`
-	Timezone      int `xml:"Body>AnswerRequest>taskList>Task>Reservation>Start>Timezone"`
+	Guid          string `xml:"Body>AnswerRequest>guid"`
+	Timezone      int    `xml:"Body>AnswerRequest>taskList>Task>Reservation>Start>Timezone"`
 	TechStatus    TaskStatus
 	VehicleDevice VehicleDevice `xml:"Body>AnswerRequest>taskList>Task>Destination"`
 	AccessDevice  AccessDevice  `xml:"Body>AnswerRequest>taskList>Task>Reservation>UserAccessList>UserAccess"`

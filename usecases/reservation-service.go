@@ -2,9 +2,9 @@ package usecases
 
 import (
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/leoride/tako-sim/domain"
 	"time"
-	"github.com/google/uuid"
 )
 
 type ReservationClientI interface {
@@ -16,7 +16,7 @@ type ReservationService struct {
 	tripService       *TripService
 	reservations      []*domain.Reservation
 
-	cucmRequests	  map[string]*domain.DriverSwipe
+	cucmRequests map[string]*domain.DriverSwipe
 }
 
 type ReservationWatcherThread struct {
@@ -137,8 +137,17 @@ func (rs *ReservationService) HandleNewDriverSwipe(ds *domain.DriverSwipe) {
 		rs.tripService.HandleTripStart(trip)
 
 	} else if existingRes != nil && existingRes.Trip != nil {
-		fmt.Println("Driver swipe received for ongoing trip, ending trip", existingRes.ReservationId)
-		rs.tripService.HandleTripEnd(existingRes.Trip)
+		if existingRes.Trip.Status == domain.ENDED {
+			fmt.Println("Driver swipe received for ongoing trip, starting trip again", existingRes.ReservationId)
+
+			existingRes.Trip.IgnitionStatus = true
+			existingRes.Trip.IgnitionChange = time.Now()
+			rs.tripService.HandleTripStart(existingRes.Trip)
+
+		} else {
+			fmt.Println("Driver swipe received for ongoing trip, ending trip", existingRes.ReservationId)
+			rs.tripService.HandleTripEnd(existingRes.Trip)
+		}
 	}
 
 	go rs.sendDriverSwipeStatusUpdates(ds)

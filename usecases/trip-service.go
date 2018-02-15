@@ -36,8 +36,11 @@ func NewTripService(tc TripClientI, trips []*domain.Trip) *TripService {
 }
 
 func (ts *TripService) HandleTripStart(t *domain.Trip) {
-	t.StartTime = time.Now()
-	t.OdoStart = rand.Intn(100000)
+	if t.OdoStart == 0 {
+		t.StartTime = time.Now()
+		t.OdoStart = rand.Intn(100000)
+	}
+
 	t.Status = domain.IN_PROGRESS
 
 	go ts.sendTripStart(t)
