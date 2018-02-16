@@ -50,6 +50,10 @@ func (rs *ReservationService) GetReservation(id string) *domain.Reservation {
 }
 
 func (rs *ReservationService) HandleNewReservation(r *domain.Reservation) {
+	if r.AccessDevice.SmartcardSerialNo == "" {
+		r.AccessDevice.SmartcardSerialNo = "0"
+	}
+
 	r.GenerateTaskNumber()
 	r.TechStatus = domain.NEW
 
@@ -81,6 +85,12 @@ func (rs *ReservationService) HandleNewReservation(r *domain.Reservation) {
 }
 
 func (rs *ReservationService) HandleNewDriverSwipe(ds *domain.DriverSwipe) {
+	if ds.AccessDevice.SmartcardType == "Hitag32" {
+		ds.AccessDevice.SmartcardType = "Hitag_32"
+	} else if ds.AccessDevice.SmartcardType == "Hitag16" {
+		ds.AccessDevice.SmartcardType = "Hitag_16"
+	}
+
 	ds.GenerateTaskNumber()
 	ds.TechStatus = domain.NEW
 
