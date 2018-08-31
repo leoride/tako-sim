@@ -267,5 +267,7 @@ func (rw *ReservationWatcherThread) Watch() {
 
 			rw.TripService.HandleTripSegment(t)
 		}
+
+		time.Sleep(1 * time.Second)
 	}
 }
